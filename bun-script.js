@@ -145,7 +145,7 @@ const renderResponsePage = (title, message, isError = false) => {
 
 app.post("/deploy", async (c) => {
   // Read form data using parseBody for standard form submission
-  const { orgName, geminiKey } = await c.req.parseBody(); // Removed humanitecToken
+  let { orgName, geminiKey } = await c.req.parseBody(); // Removed humanitecToken, made orgName mutable
 
   // Basic validation (can be expanded)
   if (!orgName || !geminiKey) {
@@ -168,10 +168,16 @@ app.post("/deploy", async (c) => {
         "Missing humanitec_service_user_api_token in environment variables."
       );
     }
+    // --- Make Org Name Unique ---
+    const randomSuffix = Math.floor(10000 + Math.random() * 90000); // 5 random digits
+    const uniqueOrgName = `${orgName}-${randomSuffix}`;
+    console.log(`Using unique org name for deployment: ${uniqueOrgName}`);
+    // --- End Unique Org Name ---
+
     const humanitecOrgId = "canyon-demo";
-    const serviceUserName = `canyon-chat-deployer-${orgName}`; // Unique name
-    const tokenId = `canyon-chat-token-${orgName}`; // Unique token ID
-    const tokenDescription = `Token for Canyon Chat deployment (${orgName})`;
+    const serviceUserName = `canyon-chat-deployer-${uniqueOrgName}`; // Use unique name
+    const tokenId = `canyon-chat-token-${uniqueOrgName}`; // Use unique name
+    const tokenDescription = `Token for Canyon Chat deployment (${uniqueOrgName})`; // Use unique name
     const expiryDate = "2035-01-01T00:00:00Z"; // Far future expiry
 
     console.log(`Attempting to create/find service user: ${serviceUserName}`);
@@ -326,7 +332,7 @@ app.post("/deploy", async (c) => {
       input: {
         projectId: projectId,
         environmentId: environmentId,
-        name: orgName,
+        name: uniqueOrgName, // Use unique name for Railway service
         // branch: "main", // Removed - Not needed for image source
         source: {
           // repo: "DominicJamesWhite/CanyonChat", // Removed
@@ -471,7 +477,7 @@ app.post("/deploy", async (c) => {
     return c.html(
       renderResponsePage(
         "Deployment Complete",
-        `Service will be available shortly at: https://${orgName}.canyon-alpha.com`
+        `Service will be available shortly at: https://${uniqueOrgName}.canyon-alpha.com` // Use unique name in URL
       )
     );
   } catch (error) {
