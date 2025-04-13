@@ -133,13 +133,6 @@ app.post("/deploy", async (c) => {
       }
     `;
 
-    // Define the serviceInstanceLimitsUpdate mutation
-    const serviceInstanceLimitsUpdateMutation = `
-      mutation ServiceInstanceLimitsUpdate($input: ServiceInstanceLimitsUpdateInput!) {
-        serviceInstanceLimitsUpdate(input: $input)
-      }
-    `;
-
     // Define the serviceDomainCreate mutation
     const serviceDomainCreateMutation = `
       mutation ServiceDomainCreate($input: ServiceDomainCreateInput!) {
@@ -224,64 +217,7 @@ app.post("/deploy", async (c) => {
     const serviceId = serviceCreateResult.data.serviceCreate.id;
     console.log(`Service created successfully. Service ID: ${serviceId}`);
 
-    // --- Step 2: Update Service Limits ---
-    console.log(
-      `Attempting to update service limits for service ID: ${serviceId}`
-    );
-    const serviceInstanceLimitsUpdateVariables = {
-      input: {
-        projectId: projectId,
-        environmentId: environmentId,
-        serviceId: serviceId,
-        memoryGB: 2, // Set RAM limit to 2GB using the correct field
-      },
-    };
-
-    const limitsUpdateResponse = await fetch(
-      "https://backboard.railway.com/graphql/v2",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Bun.env.RAILWAY_TOKEN}`,
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          query: serviceInstanceLimitsUpdateMutation,
-          variables: serviceInstanceLimitsUpdateVariables,
-        }),
-      }
-    );
-
-    const limitsUpdateResult = await limitsUpdateResponse.json();
-
-    if (limitsUpdateResult.errors) {
-      console.error(
-        "GraphQL Errors (serviceInstanceLimitsUpdate):",
-        limitsUpdateResult.errors
-      );
-      const errorMessages = limitsUpdateResult.errors
-        .map((e) => e.message)
-        .join("; ");
-      // Throw an error if limits update fails
-      throw new Error(`Failed to update service limits: ${errorMessages}`);
-    } else if (
-      !limitsUpdateResult.data ||
-      limitsUpdateResult.data.serviceInstanceLimitsUpdate !== true // Explicitly check if the boolean return is true
-    ) {
-      console.error(
-        "GraphQL response indicates limits update failed (returned false or unexpected structure):",
-        limitsUpdateResult
-      );
-      // Throw an error if the API indicates failure (returns false)
-      throw new Error("Failed to update service limits. API returned failure.");
-    } else {
-      console.log(
-        `Service limits updated successfully for service ID: ${serviceId}`
-      );
-    }
-
-    // --- Step 3: Create the Service Domain ---
+    // --- Step 2: Create the Service Domain ---
 
     const serviceDomainCreateVariables = {
       input: {
@@ -352,11 +288,11 @@ app.post("/deploy", async (c) => {
     const domain = serviceDomainResult.data.serviceDomainCreate.domain;
     console.log(`Service domain created successfully: ${domain}`);
 
-    // Return HTML success page with domain and mention limits
+    // Return HTML success page with domain
     return c.html(
       renderResponsePage(
         "Deployment Complete",
-        `Service created (ID: ${serviceId}), limits set to 2GB RAM, and available at: https://${domain}`
+        `Service created (ID: ${serviceId}) and available at: https://${domain}`
       )
     );
   } catch (error) {
