@@ -51,8 +51,6 @@ app.get("/", (c) => {
             />
           </div>
 
-          <div>Cool zone for cool guys</div>
-
           <button
             type="submit"
             class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
@@ -292,7 +290,7 @@ app.post("/deploy", async (c) => {
     return c.html(
       renderResponsePage(
         "Deployment Complete",
-        `Service created (ID: ${serviceId}) and available at: https://${domain}`
+        `Service available at: https://${serviceId}.canyon-alpha.com`
       )
     );
   } catch (error) {
