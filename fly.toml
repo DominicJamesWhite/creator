@@ -1,0 +1,34 @@
+# fly.toml app configuration file generated for canyonchat-creator
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "canyonchat-creator"
+primary_region = "ams"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile" # Assumes Dockerfile uses bun base image and installs flyctl
+
+[env]
+  # PORT needs to be set for Bun/Hono to listen correctly inside the container
+  PORT = "8080"
+  # FLY_API_TOKEN is automatically injected by Fly.io for flyctl to work
+
+[http_service]
+  internal_port = 8080 # Matches the port in fly-machine-create.js
+  force_https = true
+  auto_stop_machines = true # Can stop if inactive
+  auto_start_machines = true
+  min_machines_running = 1 # Needs to be running to receive requests
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512 # Might need more memory for flyctl operations
+
+# Ensure flyctl is installed via Dockerfile or uncomment and adjust the release_command below
+# [deploy]
+#   release_command = "curl -L https://fly.io/install.sh | sh" # Example for Debian/Ubuntu based images
