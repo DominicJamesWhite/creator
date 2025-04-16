@@ -45,8 +45,3 @@ dev
 *.key
 *.key.pub
 gcp-key.json
-
-masks.json
-
-# mcp config
-app/mcp/mcp_config.json
